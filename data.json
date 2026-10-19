@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "envelopeTitle": "Gửi người thương của anh",
+    "envelopeSubtitle": "Một khu vườn nhỏ lưu giữ những khoảnh khắc của chúng mình...",
+    "buttonText": "Chạm để mở thiệp",
+    "musicUrl": "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3"
+  },
+  "mainView": {
+    "greetingTitle": "Chúc Mừng Ngày Đặc Biệt!",
+    "typingMessage": "Cảm ơn em đã luôn là ánh nắng ấm áp trong cuộc đời anh. Mỗi bông hoa trong bó hoa này đều cất giữ một kỷ niệm đẹp của hai đứa mình. Em hãy chạm nhẹ vào từng bông hoa để mở ra nhé!",
+    "hintText": "✨ Chạm vào từng bông hoa đang tỏa sáng để xem kỷ niệm"
+  },
+  "memories": [
+    {
+      "id": 1,
+      "flowerName": "Hoa Hồng Đỏ",
+      "title": "Ngày Đầu Tiên Gặp Gỡ",
+      "date": "14/02/2024",
+      "image": "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80",
+      "note": "Khoảnh khắc ánh mắt ta chạm nhau ở quán cà phê nhỏ, anh biết mình đã tìm thấy mảnh ghép còn thiếu."
+    },
+    {
+      "id": 2,
+      "flowerName": "Hoa Tulip Hồng",
+      "title": "Chuyến Đi Xa Đầu Tiên",
+      "date": "30/04/2024",
+      "image": "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80",
+      "note": "Cùng nhau đón bình minh trên đỉnh đồi lộng gió, nắm tay nhau đi qua những con dốc dài."
+    },
+    {
+      "id": 3,
+      "flowerName": "Hoa Hướng Dương",
+      "title": "Nụ Cười Rạng Rỡ Nhất",
+      "date": "20/10/2024",
+      "image": "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=800&q=80",
+      "note": "Em luôn tỏa sáng và mang lại năng lượng tích cực giống như đóa hướng dương hướng về mặt trời."
+    },
+    {
+      "id": 4,
+      "flowerName": "Hoa Cẩm Tú Cầu",
+      "title": "Cơn Mưa Chiều Bất Chợt",
+      "date": "15/12/2024",
+      "image": "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80",
+      "note": "Hai đứa đứng trú mưa dưới hiên nhà, cùng nghe chung một bản nhạc qua chiếc tai nghe nhỏ."
+    },
+    {
+      "id": 5,
+      "flowerName": "Hoa Lưu Ly Tím",
+      "title": "Lời Hứa Cho Tương Lai",
+      "date": "Hôm nay & Mãi mãi",
+      "image": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
+      "note": "Chúc người thương luôn bình yên, rạng rỡ. Chúng mình hãy cùng nhau viết tiếp thật nhiều mùa hoa nữa nhé!"
+    }
+  ]
+}
