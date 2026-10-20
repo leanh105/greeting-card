@@ -38,6 +38,7 @@
     }
     * {
       -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
     }
     html, body {
       margin: 0;
@@ -47,21 +48,25 @@
       height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
-      touch-action: manipulation;
       background: radial-gradient(circle at 50% 35%, #2e1527 0%, #160a16 65%, #0c050d 100%);
       color: #fff;
+    }
+
+    /* Đảm bảo mọi nút và vùng tương tác luôn nhận cảm ứng trên iOS/Android WebView */
+    button, .interactive-zone, .flower-node {
+      cursor: pointer;
+      touch-action: manipulation;
+      pointer-events: auto;
     }
 
     /* Hiệu ứng Phong Bì 3D */
     .envelope-wrapper {
       perspective: 1000px;
-      will-change: transform, opacity;
       transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
     }
     .envelope-flap {
       transform-origin: top center;
       transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
-      will-change: transform;
     }
     .envelope-open .envelope-flap {
       transform: rotateX(180deg);
@@ -71,43 +76,39 @@
     }
     .envelope-letter {
       transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s;
-      will-change: transform;
     }
 
-    /* Hiệu ứng Nhịp thở (Pulsing) & Hào quang (Glow) 60FPS */
+    /* Hiệu ứng Nhịp thở & Hào quang (Glow) */
     @keyframes flowerBreath {
-      0%, 100% { transform: scale3d(1, 1, 1); }
-      50% { transform: scale3d(1.06, 1.06, 1); }
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
     }
     @keyframes glowPulse {
-      0%, 100% { opacity: 0.25; transform: scale3d(0.92, 0.92, 1); }
-      50% { opacity: 0.85; transform: scale3d(1.18, 1.18, 1); }
+      0%, 100% { opacity: 0.25; transform: scale(0.92); }
+      50% { opacity: 0.85; transform: scale(1.18); }
     }
     @keyframes swayBouquet {
-      0%, 100% { transform: rotate(-1.2deg); }
-      50% { transform: rotate(1.2deg); }
+      0%, 100% { transform: rotate(-1deg); }
+      50% { transform: rotate(1deg); }
     }
 
     .bouquet-sway {
       transform-origin: bottom center;
       animation: swayBouquet 5.5s ease-in-out infinite;
-      will-change: transform;
     }
-    .flower-node {
-      cursor: pointer;
+    .flower-visual {
       transform-box: fill-box;
       transform-origin: center;
       animation: flowerBreath 3.2s ease-in-out infinite;
-      will-change: transform;
+      pointer-events: none;
     }
-    .flower-node:nth-child(2n) { animation-delay: -1.1s; }
-    .flower-node:nth-child(3n) { animation-delay: -2.3s; }
+    .flower-node:nth-child(2n) .flower-visual { animation-delay: -1.1s; }
+    .flower-node:nth-child(3n) .flower-visual { animation-delay: -2.3s; }
 
     .flower-glow {
       transform-box: fill-box;
       transform-origin: center;
       animation: glowPulse 2.4s ease-in-out infinite;
-      will-change: transform, opacity;
       pointer-events: none;
     }
     .flower-visited .flower-glow {
@@ -127,27 +128,33 @@
       animation: blinkCursor 0.8s infinite;
     }
 
-    /* Chuyển cảnh Modal */
+    /* SỬA LỖI CHẶN CẢM ỨNG WEBVIEW: Kết hợp visibility: hidden khi đóng Modal */
     .modal-backdrop {
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.28s ease;
-      will-change: opacity;
+      transition: opacity 0.28s ease, visibility 0.28s ease;
     }
     .modal-backdrop.active {
       opacity: 1;
+      visibility: visible;
       pointer-events: auto;
     }
     .modal-card {
-      transform: scale3d(0.9, 0.9, 1) translateY(14px);
-      transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
-      will-change: transform;
+      transform: scale(0.92) translateY(12px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .modal-backdrop.active .modal-card {
-      transform: scale3d(1, 1, 1) translateY(0);
+      transform: scale(1) translateY(0);
     }
 
-    /* Cho phép cuộn mượt bên trong bảng Admin */
+    /* Trạng thái ẩn hoàn toàn cho các màn hình chưa kích hoạt */
+    .screen-hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
     .admin-scroll {
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -160,30 +167,29 @@
   <!-- CANVAS HIỆU ỨNG NỀN -->
   <canvas id="ambientCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
 
-  <!-- THANH ĐIỀU KHIỂN TRÊN CÙNG (Tích hợp nút khóa Admin góc phải) -->
-  <header class="fixed top-0 left-0 right-0 z-30 flex justify-between items-center px-4"
+  <!-- THANH ĐIỀU KHIỂN TRÊN CÙNG (pointer-events-none ở khung bao để không chắn cảm ứng) -->
+  <header class="fixed top-0 left-0 right-0 z-30 flex justify-between items-center px-4 pointer-events-none"
           style="padding-top: max(var(--safe-top), 12px);">
-    <!-- Tiến độ mở hoa (ẩn ở bước 1) -->
-    <div id="progressBadge" class="opacity-0 pointer-events-none transition-opacity duration-700 bg-white/10 backdrop-blur-md border border-pink-300/20 rounded-full px-3.5 py-1.5 text-xs font-medium text-pink-100 shadow-sm flex items-center gap-1.5">
+    <div id="progressBadge" class="screen-hidden transition-all duration-700 bg-white/10 backdrop-blur-md border border-pink-300/20 rounded-full px-3.5 py-1.5 text-xs font-medium text-pink-100 shadow-sm flex items-center gap-1.5">
       <span>🌸 Đã mở:</span>
       <span id="progressCounter" class="font-bold text-pink-300">0/5</span>
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 pointer-events-auto">
       <!-- Nút mở bảng Quản trị viên (Admin) -->
-      <button id="adminTriggerBtn" onclick="handleAdminTrigger()" title="Quản trị viên (Admin)"
+      <button type="button" id="adminTriggerBtn" title="Quản trị viên (Admin)"
               class="h-10 px-3 rounded-full bg-white/10 backdrop-blur-md border border-pink-300/20 flex items-center justify-center gap-1.5 text-xs font-semibold text-pink-200/80 hover:text-white active:scale-90 transition-all shadow-sm">
         <span>🔒</span>
-        <span id="adminStatusLabel" class="hidden sm:inline">Admin</span>
+        <span id="adminStatusLabel">Admin</span>
       </button>
 
       <!-- Nút Bật/Tắt nhạc -->
-      <button id="musicToggleBtn" aria-label="Bật/Tắt nhạc"
-              class="opacity-0 pointer-events-none transition-opacity duration-700 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-pink-300/20 flex items-center justify-center text-pink-200 active:scale-90 shadow-sm">
-        <svg id="iconMusicOn" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <button type="button" id="musicToggleBtn" aria-label="Bật/Tắt nhạc"
+              class="screen-hidden transition-all duration-700 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-pink-300/20 flex items-center justify-center text-pink-200 active:scale-90 shadow-sm">
+        <svg id="iconMusicOn" class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
         </svg>
-        <svg id="iconMusicOff" class="w-5 h-5 hidden text-pink-300/50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <svg id="iconMusicOff" class="w-5 h-5 hidden text-pink-300/50 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
         </svg>
@@ -195,19 +201,19 @@
        BƯỚC 1 & 2: MỞ ĐẦU (LANDING) & KÍCH HOẠT (ACTIVATION)
        ========================================================================= -->
   <section id="landingView" class="relative z-20 flex flex-col items-center justify-center w-full h-full px-6 text-center">
-    <div id="envelopeBox" class="envelope-wrapper w-full max-w-xs cursor-pointer" onclick="activateExperience()">
-      <div class="relative w-72 h-48 mx-auto mb-8">
+    <div id="envelopeBox" class="envelope-wrapper interactive-zone w-full max-w-xs" role="button" tabindex="0">
+      <div class="relative w-72 h-48 mx-auto mb-8 pointer-events-none">
         <div class="absolute inset-0 bg-rose-900/90 rounded-2xl shadow-2xl border border-pink-300/20"></div>
         <div class="envelope-letter absolute inset-x-4 top-3 bottom-3 bg-gradient-to-b from-pink-50 to-rose-100 rounded-xl shadow-md p-4 flex flex-col items-center justify-center text-rose-900">
           <span class="text-xs uppercase tracking-widest text-rose-400 font-semibold mb-1">Thiệp Kỷ Niệm</span>
           <h1 id="envTitle" class="font-handwriting text-2xl font-bold text-rose-700 leading-tight">Gửi người thương của anh</h1>
           <div class="mt-2 text-rose-400 text-lg">❦</div>
         </div>
-        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 288 192">
+        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 288 192">
           <path d="M0,0 L144,110 L288,0 L288,180 Q288,192 276,192 L12,192 Q0,192 0,180 Z" fill="#9f1239" opacity="0.92"/>
           <path d="M0,192 L144,96 L288,192 Z" fill="#881337"/>
         </svg>
-        <svg class="envelope-flap absolute top-0 left-0 w-full h-28 pointer-events-none z-10" viewBox="0 0 288 112">
+        <svg class="envelope-flap absolute top-0 left-0 w-full h-28 z-10" viewBox="0 0 288 112">
           <path d="M0,0 L288,0 L144,108 Z" fill="#be123c" stroke="#fda4af" stroke-width="0.6"/>
         </svg>
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-rose-700 p-0.5 shadow-lg flex items-center justify-center animate-pulse">
@@ -215,12 +221,12 @@
         </div>
       </div>
 
-      <p id="envSubtitle" class="text-pink-100/90 text-sm sm:text-base leading-relaxed mb-6 px-2">
+      <p id="envSubtitle" class="text-pink-100/90 text-sm sm:text-base leading-relaxed mb-6 px-2 pointer-events-none">
         Một khu vườn nhỏ lưu giữ những khoảnh khắc của chúng mình...
       </p>
 
-      <button type="button"
-              class="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-sm shadow-lg shadow-rose-500/30 active:scale-95 transition-transform">
+      <button type="button" id="openCardBtn"
+              class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-sm shadow-lg shadow-rose-500/30 active:scale-95 transition-transform">
         <span id="envBtnText">Chạm để mở thiệp</span>
         <span>✨</span>
       </button>
@@ -228,12 +234,12 @@
   </section>
 
   <!-- =========================================================================
-       BƯỚC 3: KHÔNG GIAN CHÍNH (MAIN VIEW - THÔNG ĐIỆP & BÓ HOA ĐÃ CĂN CHỈNH)
+       BƯỚC 3: KHÔNG GIAN CHÍNH (MAIN VIEW - THÔNG ĐIỆP & BÓ HOA TƯƠNG TÁC)
        ========================================================================= -->
-  <main id="mainView" class="fixed inset-0 z-10 flex flex-col justify-between items-center px-4 opacity-0 pointer-events-none transition-opacity duration-1000"
+  <main id="mainView" class="screen-hidden fixed inset-0 z-10 flex flex-col justify-between items-center px-4 transition-opacity duration-1000"
         style="padding-top: calc(max(var(--safe-top), 16px) + 42px); padding-bottom: max(var(--safe-bottom), 14px);">
 
-    <div class="w-full max-w-md text-center bg-white/5 backdrop-blur-sm border border-pink-200/15 rounded-2xl p-4 shadow-inner">
+    <div class="w-full max-w-md text-center bg-white/5 backdrop-blur-sm border border-pink-200/15 rounded-2xl p-4 shadow-inner pointer-events-none">
       <h2 id="mainGreetingTitle" class="font-handwriting text-3xl sm:text-4xl text-pink-300 mb-1.5 drop-shadow">
         Chúc Mừng Ngày Đặc Biệt!
       </h2>
@@ -242,7 +248,7 @@
       </div>
     </div>
 
-    <!-- BÓ HOA SVG ĐÃ CĂN CHỈNH KHỚP 100% ĐẦU CÀNH VÀ TÂM HOA -->
+    <!-- BÓ HOA SVG ĐÃ SỬA HITBOX CẢM ỨNG ĐA NỀN TẢNG -->
     <div class="relative flex-1 w-full max-w-sm flex items-center justify-center my-1 overflow-visible">
       <svg id="bouquetSvg" class="w-full h-full max-h-[52dvh] overflow-visible bouquet-sway" viewBox="0 0 360 420" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -271,10 +277,10 @@
         </defs>
 
         <!-- Lớp giấy gói phía sau -->
-        <path d="M78 215 Q180 175 282 215 L230 335 L130 335 Z" fill="url(#wrapBack)" />
+        <path d="M78 215 Q180 175 282 215 L230 335 L130 335 Z" fill="url(#wrapBack)" pointer-events="none" />
 
         <!-- Cành hoa khớp chính xác với tâm 5 bông hoa -->
-        <g stroke="#15803d" stroke-width="4" stroke-linecap="round" fill="none">
+        <g stroke="#15803d" stroke-width="4" stroke-linecap="round" fill="none" pointer-events="none">
           <path d="M180 320 Q132 250 95 195" />
           <path d="M180 320 Q228 250 265 195" />
           <path d="M180 320 Q146 215 120 130" />
@@ -283,7 +289,7 @@
         </g>
 
         <!-- Lá cây bám trên đường cong cành -->
-        <g fill="#22c55e">
+        <g fill="#22c55e" pointer-events="none">
           <path d="M180 195 C160 190 155 170 172 165 C180 168 180 182 180 195 Z" />
           <path d="M180 175 C200 170 205 150 188 145 C180 148 180 162 180 175 Z" />
           <path d="M138 190 C115 185 110 164 126 158 C136 164 140 178 138 190 Z" />
@@ -295,94 +301,107 @@
         </g>
 
         <!-- Giấy gói phía trước & Nơ lụa liền mạch -->
-        <path d="M128 325 L232 325 L212 386 Q180 398 148 386 Z" fill="url(#wrapFront)" />
-        <path d="M78 215 L180 272 L235 335 L125 335 Z" fill="url(#wrapFold)" opacity="0.95" />
-        <path d="M282 215 L180 272 L125 335 L235 335 Z" fill="url(#wrapFront)" opacity="0.9" />
-        <path d="M126 332 Q180 342 234 332" stroke="#e11d48" stroke-width="7" stroke-linecap="round" />
-        <path d="M176 336 L158 388 M184 336 L202 388" stroke="#be123c" stroke-width="5.5" stroke-linecap="round" />
-        <path d="M180 336 C152 314 134 326 140 344 C146 356 166 346 180 336 Z" fill="#e11d48" />
-        <path d="M180 336 C208 314 226 326 220 344 C214 356 194 346 180 336 Z" fill="#e11d48" />
-        <ellipse cx="180" cy="336" rx="9" ry="7.5" fill="#9f1239" />
+        <g pointer-events="none">
+          <path d="M128 325 L232 325 L212 386 Q180 398 148 386 Z" fill="url(#wrapFront)" />
+          <path d="M78 215 L180 272 L235 335 L125 335 Z" fill="url(#wrapFold)" opacity="0.95" />
+          <path d="M282 215 L180 272 L125 335 L235 335 Z" fill="url(#wrapFront)" opacity="0.9" />
+          <path d="M126 332 Q180 342 234 332" stroke="#e11d48" stroke-width="7" stroke-linecap="round" />
+          <path d="M176 336 L158 388 M184 336 L202 388" stroke="#be123c" stroke-width="5.5" stroke-linecap="round" />
+          <path d="M180 336 C152 314 134 326 140 344 C146 356 166 346 180 336 Z" fill="#e11d48" />
+          <path d="M180 336 C208 314 226 326 220 344 C214 356 194 346 180 336 Z" fill="#e11d48" />
+          <ellipse cx="180" cy="336" rx="9" ry="7.5" fill="#9f1239" />
+        </g>
 
         <!-- BÔNG 1: Hoa Hồng Đỏ (180, 95) -->
-        <g class="flower-node" data-index="0" onclick="openMemory(0)">
+        <g class="flower-node" data-index="0">
           <circle class="flower-glow" cx="180" cy="95" r="46" fill="url(#softGlow)" />
-          <circle cx="180" cy="95" r="38" fill="transparent" />
-          <g transform="translate(180, 95)">
-            <circle cx="0" cy="-16" r="16" fill="#f43f5e" />
-            <circle cx="15" cy="-5" r="16" fill="#e11d48" />
-            <circle cx="10" cy="13" r="16" fill="#f43f5e" />
-            <circle cx="-10" cy="13" r="16" fill="#e11d48" />
-            <circle cx="-15" cy="-5" r="16" fill="#fb7185" />
-            <circle cx="0" cy="0" r="12" fill="#be123c" />
-            <path d="M-5 -2 Q0 -8 6 -1 Q2 6 -4 3 Z" fill="#fda4af" />
+          <g class="flower-visual">
+            <g transform="translate(180, 95)">
+              <circle cx="0" cy="-16" r="16" fill="#f43f5e" />
+              <circle cx="15" cy="-5" r="16" fill="#e11d48" />
+              <circle cx="10" cy="13" r="16" fill="#f43f5e" />
+              <circle cx="-10" cy="13" r="16" fill="#e11d48" />
+              <circle cx="-15" cy="-5" r="16" fill="#fb7185" />
+              <circle cx="0" cy="0" r="12" fill="#be123c" />
+              <path d="M-5 -2 Q0 -8 6 -1 Q2 6 -4 3 Z" fill="#fda4af" />
+            </g>
           </g>
+          <!-- Lớp nhận diện cảm ứng chuẩn WebView (fill-opacity > 0) -->
+          <circle cx="180" cy="95" r="42" fill="#ffffff" fill-opacity="0.005" pointer-events="all" />
         </g>
 
         <!-- BÔNG 2: Hoa Tulip Hồng (120, 130) -->
-        <g class="flower-node" data-index="1" onclick="openMemory(1)">
+        <g class="flower-node" data-index="1">
           <circle class="flower-glow" cx="120" cy="130" r="44" fill="url(#softGlow)" />
-          <circle cx="120" cy="130" r="38" fill="transparent" />
-          <g transform="translate(120, 130) rotate(-16)">
-            <path d="M-6 15 Q0 23 6 15 Z" fill="#15803d" />
-            <ellipse cx="-10" cy="0" rx="12" ry="20" transform="rotate(-16 -10 0)" fill="#f472b6" />
-            <ellipse cx="10" cy="0" rx="12" ry="20" transform="rotate(16 10 0)" fill="#ec4899" />
-            <ellipse cx="0" cy="-2" rx="13" ry="21" fill="#f9a8d4" />
-            <circle cx="0" cy="-6" r="5" fill="#fef08a" />
+          <g class="flower-visual">
+            <g transform="translate(120, 130) rotate(-16)">
+              <path d="M-6 15 Q0 23 6 15 Z" fill="#15803d" />
+              <ellipse cx="-10" cy="0" rx="12" ry="20" transform="rotate(-16 -10 0)" fill="#f472b6" />
+              <ellipse cx="10" cy="0" rx="12" ry="20" transform="rotate(16 10 0)" fill="#ec4899" />
+              <ellipse cx="0" cy="-2" rx="13" ry="21" fill="#f9a8d4" />
+              <circle cx="0" cy="-6" r="5" fill="#fef08a" />
+            </g>
           </g>
+          <circle cx="120" cy="130" r="42" fill="#ffffff" fill-opacity="0.005" pointer-events="all" />
         </g>
 
         <!-- BÔNG 3: Hoa Hướng Dương (240, 130) -->
-        <g class="flower-node" data-index="2" onclick="openMemory(2)">
+        <g class="flower-node" data-index="2">
           <circle class="flower-glow" cx="240" cy="130" r="44" fill="url(#goldGlow)" />
-          <circle cx="240" cy="130" r="38" fill="transparent" />
-          <g transform="translate(240, 130) rotate(14)">
-            <g fill="#facc15">
-              <ellipse cx="0" cy="-20" rx="7" ry="12" />
-              <ellipse cx="0" cy="20" rx="7" ry="12" />
-              <ellipse cx="-20" cy="0" rx="12" ry="7" />
-              <ellipse cx="20" cy="0" rx="12" ry="7" />
-              <ellipse cx="-14" cy="-14" rx="10" ry="7" transform="rotate(45 -14 -14)" />
-              <ellipse cx="14" cy="-14" rx="10" ry="7" transform="rotate(-45 14 -14)" />
-              <ellipse cx="-14" cy="14" rx="10" ry="7" transform="rotate(-45 -14 14)" />
-              <ellipse cx="14" cy="14" rx="10" ry="7" transform="rotate(45 14 14)" />
+          <g class="flower-visual">
+            <g transform="translate(240, 130) rotate(14)">
+              <g fill="#facc15">
+                <ellipse cx="0" cy="-20" rx="7" ry="12" />
+                <ellipse cx="0" cy="20" rx="7" ry="12" />
+                <ellipse cx="-20" cy="0" rx="12" ry="7" />
+                <ellipse cx="20" cy="0" rx="12" ry="7" />
+                <ellipse cx="-14" cy="-14" rx="10" ry="7" transform="rotate(45 -14 -14)" />
+                <ellipse cx="14" cy="-14" rx="10" ry="7" transform="rotate(-45 14 -14)" />
+                <ellipse cx="-14" cy="14" rx="10" ry="7" transform="rotate(-45 -14 14)" />
+                <ellipse cx="14" cy="14" rx="10" ry="7" transform="rotate(45 14 14)" />
+              </g>
+              <circle cx="0" cy="0" r="13" fill="#78350f" />
+              <circle cx="-4" cy="-3" r="2.2" fill="#fde047" />
             </g>
-            <circle cx="0" cy="0" r="13" fill="#78350f" />
-            <circle cx="-4" cy="-3" r="2.2" fill="#fde047" />
           </g>
+          <circle cx="240" cy="130" r="42" fill="#ffffff" fill-opacity="0.005" pointer-events="all" />
         </g>
 
         <!-- BÔNG 4: Hoa Cẩm Tú Cầu (95, 195) -->
-        <g class="flower-node" data-index="3" onclick="openMemory(3)">
+        <g class="flower-node" data-index="3">
           <circle class="flower-glow" cx="95" cy="195" r="44" fill="url(#softGlow)" />
-          <circle cx="95" cy="195" r="38" fill="transparent" />
-          <g transform="translate(95, 195) rotate(-22)">
-            <circle cx="-10" cy="-8" r="13" fill="#93c5fd" />
-            <circle cx="10" cy="-8" r="13" fill="#c4b5fd" />
-            <circle cx="-10" cy="10" r="13" fill="#a5b4fc" />
-            <circle cx="10" cy="10" r="13" fill="#f9a8d4" />
-            <circle cx="0" cy="0" r="11" fill="#e0e7ff" />
-            <circle cx="0" cy="0" r="4.5" fill="#fb7185" />
+          <g class="flower-visual">
+            <g transform="translate(95, 195) rotate(-22)">
+              <circle cx="-10" cy="-8" r="13" fill="#93c5fd" />
+              <circle cx="10" cy="-8" r="13" fill="#c4b5fd" />
+              <circle cx="-10" cy="10" r="13" fill="#a5b4fc" />
+              <circle cx="10" cy="10" r="13" fill="#f9a8d4" />
+              <circle cx="0" cy="0" r="11" fill="#e0e7ff" />
+              <circle cx="0" cy="0" r="4.5" fill="#fb7185" />
+            </g>
           </g>
+          <circle cx="95" cy="195" r="42" fill="#ffffff" fill-opacity="0.005" pointer-events="all" />
         </g>
 
         <!-- BÔNG 5: Hoa Lưu Ly Tím (265, 195) -->
-        <g class="flower-node" data-index="4" onclick="openMemory(4)">
+        <g class="flower-node" data-index="4">
           <circle class="flower-glow" cx="265" cy="195" r="44" fill="url(#softGlow)" />
-          <circle cx="265" cy="195" r="38" fill="transparent" />
-          <g transform="translate(265, 195) rotate(22)">
-            <circle cx="0" cy="-15" r="13" fill="#c084fc" />
-            <circle cx="14" cy="-4" r="13" fill="#a855f7" />
-            <circle cx="9" cy="12" r="13" fill="#d8b4fe" />
-            <circle cx="-9" cy="12" r="13" fill="#a855f7" />
-            <circle cx="-14" cy="-4" r="13" fill="#c084fc" />
-            <circle cx="0" cy="0" r="7" fill="#fef08a" />
+          <g class="flower-visual">
+            <g transform="translate(265, 195) rotate(22)">
+              <circle cx="0" cy="-15" r="13" fill="#c084fc" />
+              <circle cx="14" cy="-4" r="13" fill="#a855f7" />
+              <circle cx="9" cy="12" r="13" fill="#d8b4fe" />
+              <circle cx="-9" cy="12" r="13" fill="#a855f7" />
+              <circle cx="-14" cy="-4" r="13" fill="#c084fc" />
+              <circle cx="0" cy="0" r="7" fill="#fef08a" />
+            </g>
           </g>
+          <circle cx="265" cy="195" r="42" fill="#ffffff" fill-opacity="0.005" pointer-events="all" />
         </g>
       </svg>
     </div>
 
-    <div class="w-full text-center pb-1">
+    <div class="w-full text-center pb-1 pointer-events-none">
       <p id="mainHintText" class="inline-block px-4 py-1.5 rounded-full bg-pink-500/15 border border-pink-300/20 text-xs text-pink-200 animate-pulse">
         ✨ Chạm vào từng bông hoa đang tỏa sáng để xem kỷ niệm
       </p>
@@ -392,11 +411,9 @@
   <!-- =========================================================================
        BƯỚC 4: LIGHTBOX XEM ẢNH KỶ NIỆM
        ========================================================================= -->
-  <div id="lightboxModal" class="modal-backdrop fixed inset-0 z-40 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-       onclick="closeMemory(event)">
-    <div class="modal-card relative w-full max-w-sm bg-gradient-to-b from-rose-950 to-slate-950 border border-pink-300/30 rounded-3xl overflow-hidden shadow-2xl"
-         onclick="event.stopPropagation()">
-      <button type="button" onclick="closeMemory()" aria-label="Đóng khung ảnh"
+  <div id="lightboxModal" class="modal-backdrop fixed inset-0 z-40 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div id="lightboxCard" class="modal-card relative w-full max-w-sm bg-gradient-to-b from-rose-950 to-slate-950 border border-pink-300/30 rounded-3xl overflow-hidden shadow-2xl">
+      <button type="button" id="closeLightboxTopBtn" aria-label="Đóng khung ảnh"
               class="absolute top-3 right-3 z-20 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-90 transition-transform">
         ✕
       </button>
@@ -412,16 +429,16 @@
         <h3 id="modalTitle" class="font-handwriting text-2xl sm:text-3xl text-pink-300 mb-2"></h3>
         <p id="modalNote" class="text-sm text-pink-100/90 leading-relaxed mb-5"></p>
         <div class="flex items-center justify-center gap-3">
-          <button type="button" onclick="navigateMemory(-1)"
-                  class="px-4 py-2 rounded-full bg-white/10 text-xs font-medium text-pink-200 active:scale-95 transition-transform">
+          <button type="button" id="prevFlowerBtn"
+                  class="px-4 py-2.5 rounded-full bg-white/10 text-xs font-medium text-pink-200 active:scale-95 transition-transform">
             ← Hoa trước
           </button>
-          <button type="button" onclick="closeMemory()"
-                  class="px-6 py-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-xs font-semibold text-white shadow-md shadow-rose-500/30 active:scale-95 transition-transform">
+          <button type="button" id="closeLightboxBottomBtn"
+                  class="px-6 py-2.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-xs font-semibold text-white shadow-md shadow-rose-500/30 active:scale-95 transition-transform">
             Ngắm tiếp bó hoa
           </button>
-          <button type="button" onclick="navigateMemory(1)"
-                  class="px-4 py-2 rounded-full bg-white/10 text-xs font-medium text-pink-200 active:scale-95 transition-transform">
+          <button type="button" id="nextFlowerBtn"
+                  class="px-4 py-2.5 rounded-full bg-white/10 text-xs font-medium text-pink-200 active:scale-95 transition-transform">
             Hoa sau →
           </button>
         </div>
@@ -432,23 +449,21 @@
   <!-- =========================================================================
        MODAL ĐĂNG NHẬP ADMIN (MẬT KHẨU DUY NHẤT: 00000)
        ========================================================================= -->
-  <div id="adminLoginModal" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
-       onclick="closeAdminLogin(event)">
-    <div class="modal-card w-full max-w-xs bg-slate-900 border border-pink-400/30 rounded-3xl p-6 text-center shadow-2xl"
-         onclick="event.stopPropagation()">
+  <div id="adminLoginModal" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div id="adminLoginCard" class="modal-card w-full max-w-xs bg-slate-900 border border-pink-400/30 rounded-3xl p-6 text-center shadow-2xl">
       <div class="w-12 h-12 rounded-full bg-pink-500/20 border border-pink-400/30 mx-auto mb-3 flex items-center justify-center text-2xl">
         🔐
       </div>
       <h3 class="text-lg font-bold text-pink-200 mb-1">Đăng Nhập Quản Trị Viên</h3>
       <p class="text-xs text-slate-400 mb-4">Nhập mật khẩu Admin để tùy chỉnh nội dung, đăng ảnh và tạo link chia sẻ</p>
 
-      <form onsubmit="submitAdminLogin(event)">
+      <form id="adminLoginForm">
         <input id="adminPasswordInput" type="password" inputmode="numeric" placeholder="Nhập mật khẩu..."
                class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-center text-white tracking-widest text-base focus:outline-none focus:border-pink-500 mb-2 select-text" />
         <p id="loginErrorMsg" class="text-xs text-rose-400 h-4 mb-2 opacity-0 transition-opacity">Mật khẩu không chính xác!</p>
 
         <div class="flex gap-2">
-          <button type="button" onclick="closeAdminLogin()"
+          <button type="button" id="cancelAdminLoginBtn"
                   class="flex-1 py-2.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 active:scale-95 transition-transform">
             Hủy
           </button>
@@ -505,7 +520,7 @@
       <!-- Nội dung cuộn bên trong Admin -->
       <div class="flex-1 admin-scroll p-4 sm:p-5 space-y-5 text-left text-xs sm:text-sm">
 
-        <!-- TAB 1: CHỈNH SỬA VĂN BẢN PHONG BÌ, LỜI CHÚC & NHẠC NỀN -->
+        <!-- TAB 1: CHỈNH SỬA VĂN BẢN -->
         <div id="adminTabGeneral" class="space-y-4">
           <div class="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/70 space-y-3">
             <h4 class="font-bold text-pink-300 text-xs uppercase tracking-wider">💌 Bước 1: Giao diện Phong Bì Mở Đầu</h4>
@@ -546,7 +561,7 @@
           </div>
         </div>
 
-        <!-- TAB 2: TÙY CHỈNH 5 BÔNG HOA & UPLOAD ẢNH TRỰC TIẾP (NÉN WEBP TỰ ĐỘNG) -->
+        <!-- TAB 2: TÙY CHỈNH 5 BÔNG HOA & UPLOAD ẢNH -->
         <div id="adminTabFlowers" class="hidden space-y-4">
           <div class="p-3 rounded-xl bg-pink-500/10 border border-pink-400/20 text-xs text-pink-200 flex items-center justify-between">
             <span>📸 Khi bạn chọn ảnh từ máy, hệ thống sẽ tự động nén sang chuẩn <b>WebP (&lt;120KB)</b> để tải siêu mượt trên 4G.</span>
@@ -556,15 +571,811 @@
 
         <!-- TAB 3: LƯU & CHIA SẺ ĐƯỜNG LINK -->
         <div id="adminTabShare" class="hidden space-y-4">
-          <!-- Cách 1: Link Chia Sẻ Trực Tiếp -->
           <div class="p-4 rounded-2xl bg-slate-800/70 border border-pink-400/30 space-y-3">
             <div class="flex items-center justify-between">
               <h4 class="font-bold text-pink-300 text-sm">🔗 Cách 1: Tạo Link Chia Sẻ Trực Tiếp Qua Zalo / Messenger</h4>
               <span id="urlSizeBadge" class="px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300">Sẵn sàng</span>
             </div>
             <p class="text-xs text-slate-300 leading-relaxed">
-              Đường link dưới đây chứa toàn bộ thông điệp và ảnh bạn vừa chỉnh sửa. Bất kỳ ai mở link này trên điện thoại Android hoặc iPhone đều sẽ thấy bản thiệp đã cập nhật của bạn:
+              Đường link dưới đây chứa toàn bộ thông điệp và ảnh bạn vừa chỉnh sửa. Bất kỳ ai mở link này đều sẽ thấy bản thiệp mới mà không cần đăng nhập:
             </p>
             <div class="flex gap-2">
               <input id="shareUrlOutput" type="text" readonly
-                     class="flex-1 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate
+                     class="flex-1 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-pink-200 text-xs focus:outline-none" />
+              <button type="button" onclick="copyShareLink()"
+                      class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-xs shadow-md active:scale-95 transition-transform whitespace-nowrap">
+                📋 Sao chép Link
+              </button>
+            </div>
+            <p id="shareWarningMsg" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/20 rounded-xl p-2.5">
+              ⚠️ <b>Lưu ý:</b> Bạn đang tải ảnh trực tiếp từ máy (dạng dữ liệu nhúng), khiến đường link rất dài. Để đường link ngắn gọn tuyệt đối, hãy dùng <b>Cách 2 (Tải file data.json)</b> bên dưới hoặc dán mã ImgBB API Key (miễn phí tại <i>api.imgbb.com</i>) vào ô dưới đây:
+            </p>
+            <div class="flex items-center gap-2 pt-1">
+              <input id="imgbbApiKey" type="text" placeholder="Tùy chọn: Dán ImgBB API Key để tự động tạo link ảnh ngắn..."
+                     onchange="saveImgbbKey(this.value)"
+                     class="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700 space-y-3">
+            <h4 class="font-bold text-emerald-300 text-sm">📦 Cách 2: Xuất File `data.json` (Cho Link Gốc Ngắn Gọn Vĩnh Viễn)</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Toàn bộ văn bản và <b>cả 5 bức ảnh bạn vừa tải lên từ máy</b> (đã nén WebP) sẽ được đóng gói vào file <code>data.json</code>. Bạn chỉ cần tải file này về và cập nhật lên Vercel / GitHub là đường link gốc ngắn gọn sẽ hiển thị thiệp mới cho mọi người.
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="exportDataJsonFile()"
+                      class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md active:scale-95 transition-transform">
+                ⬇️ Tải xuống file data.json
+              </button>
+              <button type="button" onclick="resetToDefaultData()"
+                      class="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs active:scale-95 transition-transform">
+                🔄 Khôi phục mặc định
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Bảng Admin -->
+      <div class="flex items-center justify-between px-5 py-3 bg-slate-950/80 border-t border-slate-800">
+        <span id="adminSaveToast" class="text-xs text-emerald-400 font-medium opacity-0 transition-opacity">
+          ✓ Đã áp dụng thay đổi!
+        </span>
+        <div class="flex gap-2">
+          <button type="button" onclick="applyAdminChanges(true)"
+                  class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-xs font-bold text-white shadow-lg shadow-rose-500/30 active:scale-95 transition-transform">
+            💾 Lưu & Xem Thử Thiệp
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Trình phát nhạc nền -->
+  <audio id="bgMusic" loop preload="auto"></audio>
+
+  <!-- =========================================================================
+       JAVASCRIPT HỆ THỐNG: ĐÃ TỐI ƯU SỰ KIỆN CHẠM ĐA NỀN TẢNG CHO ZALO/MESSENGER
+       ========================================================================= -->
+  <script>
+    const ADMIN_PASSWORD = "00000";
+    const STORAGE_KEY = "khu_vuon_ky_niem_custom_data_v1";
+    const ADMIN_AUTH_KEY = "khu_vuon_ky_niem_admin_logged";
+    const IMGBB_KEY_STORAGE = "khu_vuon_ky_niem_imgbb_key";
+
+    const defaultData = {
+      meta: {
+        envelopeTitle: "Gửi người thương của anh",
+        envelopeSubtitle: "Một khu vườn nhỏ lưu giữ những khoảnh khắc của chúng mình...",
+        buttonText: "Chạm để mở thiệp",
+        musicUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3"
+      },
+      mainView: {
+        greetingTitle: "Chúc Mừng Ngày Đặc Biệt!",
+        typingMessage: "Cảm ơn em đã luôn là ánh nắng ấm áp trong cuộc đời anh. Mỗi bông hoa trong bó hoa này đều cất giữ một kỷ niệm đẹp của hai đứa mình. Em hãy chạm nhẹ vào từng bông hoa để mở ra nhé!",
+        hintText: "✨ Chạm vào từng bông hoa đang tỏa sáng để xem kỷ niệm"
+      },
+      memories: [
+        {
+          id: 1,
+          flowerName: "Hoa Hồng Đỏ",
+          title: "Ngày Đầu Tiên Gặp Gỡ",
+          date: "14/02/2024",
+          image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80",
+          note: "Khoảnh khắc ánh mắt ta chạm nhau ở quán cà phê nhỏ, anh biết mình đã tìm thấy mảnh ghép còn thiếu."
+        },
+        {
+          id: 2,
+          flowerName: "Hoa Tulip Hồng",
+          title: "Chuyến Đi Xa Đầu Tiên",
+          date: "30/04/2024",
+          image: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80",
+          note: "Cùng nhau đón bình minh trên đỉnh đồi lộng gió, nắm tay nhau đi qua những con dốc dài."
+        },
+        {
+          id: 3,
+          flowerName: "Hoa Hướng Dương",
+          title: "Nụ Cười Rạng Rỡ Nhất",
+          date: "20/10/2024",
+          image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=800&q=80",
+          note: "Em luôn tỏa sáng và mang lại năng lượng tích cực giống như đóa hướng dương hướng về mặt trời."
+        },
+        {
+          id: 4,
+          flowerName: "Hoa Cẩm Tú Cầu",
+          title: "Cơn Mưa Chiều Bất Chợt",
+          date: "15/12/2024",
+          image: "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80",
+          note: "Hai đứa đứng trú mưa dưới hiên nhà, cùng nghe chung một bản nhạc qua chiếc tai nghe nhỏ."
+        },
+        {
+          id: 5,
+          flowerName: "Hoa Lưu Ly Tím",
+          title: "Lời Hứa Cho Tương Lai",
+          date: "Hôm nay & Mãi mãi",
+          image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
+          note: "Chúc người thương luôn bình yên, rạng rỡ. Chúng mình hãy cùng nhau viết tiếp thật nhiều mùa hoa nữa nhé!"
+        }
+      ]
+    };
+
+    let appData = JSON.parse(JSON.stringify(defaultData));
+    const visitedFlowers = new Set();
+    let currentMemoryIndex = 0;
+    let isActivated = false;
+    let isMusicPlaying = false;
+    let isCanvasPaused = false;
+    let typingTimer = null;
+
+    const bgMusic = document.getElementById('bgMusic');
+    const musicToggleBtn = document.getElementById('musicToggleBtn');
+    const iconMusicOn = document.getElementById('iconMusicOn');
+    const iconMusicOff = document.getElementById('iconMusicOff');
+
+    // Hàm tiện ích gắn sự kiện chạm/bấm nhạy 100% trên mọi WebView (Zalo, Messenger, Safari, Chrome)
+    function bindTap(element, callback) {
+      if (!element) return;
+      let lastTapTime = 0;
+      const handler = (e) => {
+        const now = Date.now();
+        if (now - lastTapTime < 300) return; // Chống nhân đôi sự kiện giữa touchend và click
+        lastTapTime = now;
+        callback(e);
+      };
+      element.addEventListener('touchend', (e) => {
+        e.stopPropagation();
+        handler(e);
+      }, { passive: true });
+      element.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handler(e);
+      });
+    }
+
+    function encodeCardDataToHash(dataObj) {
+      try {
+        const jsonStr = JSON.stringify(dataObj);
+        const bytes = new TextEncoder().encode(jsonStr);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function decodeCardDataFromHash(encodedStr) {
+      try {
+        let base64 = encodedStr.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) base64 += '=';
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        const jsonStr = new TextDecoder().decode(bytes);
+        return JSON.parse(jsonStr);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function initDataAndPreload() {
+      try {
+        const res = await fetch('./data.json', { cache: 'no-store' });
+        if (res.ok) {
+          appData = await res.json();
+        }
+      } catch (e) {}
+
+      const savedLocal = localStorage.getItem(STORAGE_KEY);
+      if (savedLocal) {
+        try {
+          appData = JSON.parse(savedLocal);
+        } catch (e) {}
+      }
+
+      const hash = window.location.hash;
+      if (hash.startsWith('#thiep=')) {
+        const encoded = hash.replace('#thiep=', '');
+        const decoded = decodeCardDataFromHash(encoded);
+        if (decoded && decoded.meta && decoded.memories) {
+          appData = decoded;
+        }
+      }
+
+      renderDataToUI();
+      updateAdminBadgeStatus();
+
+      if (hash === '#admin') {
+        handleAdminTrigger();
+      }
+    }
+
+    function renderDataToUI() {
+      document.getElementById('envTitle').textContent = appData.meta.envelopeTitle;
+      document.getElementById('envSubtitle').textContent = appData.meta.envelopeSubtitle;
+      document.getElementById('envBtnText').textContent = appData.meta.buttonText;
+      document.getElementById('mainGreetingTitle').textContent = appData.mainView.greetingTitle;
+      document.getElementById('mainHintText').textContent = appData.mainView.hintText;
+      document.getElementById('progressCounter').textContent = `${visitedFlowers.size}/${appData.memories.length}`;
+
+      if (bgMusic.src !== appData.meta.musicUrl) {
+        bgMusic.src = appData.meta.musicUrl;
+      }
+
+      appData.memories.forEach(item => {
+        if (item.image) {
+          const img = new Image();
+          img.src = item.image;
+        }
+      });
+    }
+
+    // Bước 2: Kích hoạt mở phong bì
+    function activateExperience() {
+      if (isActivated) return;
+      isActivated = true;
+
+      const envelopeBox = document.getElementById('envelopeBox');
+      const landingView = document.getElementById('landingView');
+      const mainView = document.getElementById('mainView');
+      const progressBadge = document.getElementById('progressBadge');
+
+      envelopeBox.classList.add('envelope-open');
+
+      bgMusic.volume = 0.65;
+      bgMusic.play().then(() => {
+        isMusicPlaying = true;
+        updateMusicIcon();
+      }).catch(() => {
+        isMusicPlaying = false;
+        updateMusicIcon();
+      });
+
+      setTimeout(() => {
+        envelopeBox.style.opacity = '0';
+        envelopeBox.style.transform = 'scale(1.08)';
+      }, 650);
+
+      setTimeout(() => {
+        landingView.style.display = 'none';
+        mainView.classList.remove('screen-hidden');
+        progressBadge.classList.remove('screen-hidden');
+        musicToggleBtn.classList.remove('screen-hidden');
+        startTypingEffect(appData.mainView.typingMessage);
+      }, 1250);
+    }
+
+    function startTypingEffect(text) {
+      const target = document.getElementById('typingText');
+      if (typingTimer) clearTimeout(typingTimer);
+      target.textContent = '';
+      target.classList.add('typing-cursor');
+      let index = 0;
+
+      function typeNextChar() {
+        if (index < text.length) {
+          target.textContent += text.charAt(index);
+          index++;
+          typingTimer = setTimeout(typeNextChar, 32);
+        } else {
+          target.classList.remove('typing-cursor');
+        }
+      }
+      typeNextChar();
+    }
+
+    function openMemory(index) {
+      const memory = appData.memories[index];
+      if (!memory) return;
+
+      currentMemoryIndex = index;
+      isCanvasPaused = true;
+
+      document.getElementById('modalImage').src = memory.image;
+      document.getElementById('modalFlowerBadge').textContent = memory.flowerName;
+      document.getElementById('modalDate').textContent = memory.date;
+      document.getElementById('modalTitle').textContent = memory.title;
+      document.getElementById('modalNote').textContent = memory.note;
+
+      document.getElementById('lightboxModal').classList.add('active');
+
+      visitedFlowers.add(index);
+      const flowerNode = document.querySelector(`.flower-node[data-index="${index}"]`);
+      if (flowerNode) flowerNode.classList.add('flower-visited');
+      document.getElementById('progressCounter').textContent = `${visitedFlowers.size}/${appData.memories.length}`;
+    }
+
+    function navigateMemory(direction) {
+      const total = appData.memories.length;
+      const nextIndex = (currentMemoryIndex + direction + total) % total;
+      openMemory(nextIndex);
+    }
+
+    function closeMemory() {
+      document.getElementById('lightboxModal').classList.remove('active');
+      isCanvasPaused = false;
+    }
+
+    // Hệ thống Admin Studio (Mật khẩu: 00000)
+    function isAdminAuthenticated() {
+      return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
+    }
+
+    function updateAdminBadgeStatus() {
+      const label = document.getElementById('adminStatusLabel');
+      const btn = document.getElementById('adminTriggerBtn');
+      if (isAdminAuthenticated()) {
+        label.textContent = 'Sửa thiệp';
+        btn.classList.add('border-pink-400/60', 'bg-pink-500/20');
+      } else {
+        label.textContent = 'Admin';
+        btn.classList.remove('border-pink-400/60', 'bg-pink-500/20');
+      }
+    }
+
+    function handleAdminTrigger() {
+      if (isAdminAuthenticated()) {
+        openAdminStudio();
+      } else {
+        isCanvasPaused = true;
+        const modal = document.getElementById('adminLoginModal');
+        const input = document.getElementById('adminPasswordInput');
+        document.getElementById('loginErrorMsg').classList.add('opacity-0');
+        input.value = '';
+        modal.classList.add('active');
+        setTimeout(() => input.focus(), 150);
+      }
+    }
+
+    function closeAdminLogin() {
+      document.getElementById('adminLoginModal').classList.remove('active');
+      isCanvasPaused = false;
+    }
+
+    function submitAdminLogin(event) {
+      event.preventDefault();
+      const inputVal = document.getElementById('adminPasswordInput').value.trim();
+      if (inputVal === ADMIN_PASSWORD) {
+        sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+        updateAdminBadgeStatus();
+        closeAdminLogin();
+        openAdminStudio();
+      } else {
+        document.getElementById('loginErrorMsg').classList.remove('opacity-0');
+      }
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem(ADMIN_AUTH_KEY);
+      updateAdminBadgeStatus();
+      closeAdminStudio();
+    }
+
+    function openAdminStudio() {
+      isCanvasPaused = true;
+      populateAdminForm();
+      updateShareUrlBox();
+      document.getElementById('imgbbApiKey').value = localStorage.getItem(IMGBB_KEY_STORAGE) || '';
+      document.getElementById('adminStudioModal').classList.add('active');
+    }
+
+    function closeAdminStudio() {
+      document.getElementById('adminStudioModal').classList.remove('active');
+      isCanvasPaused = false;
+    }
+
+    function switchAdminTab(tabName) {
+      const tabs = ['general', 'flowers', 'share'];
+      tabs.forEach(t => {
+        const panel = document.getElementById('adminTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (t === tabName) {
+          panel.classList.remove('hidden');
+          btn.className = 'py-2 rounded-xl bg-pink-500/20 text-pink-300 border border-pink-500/30';
+        } else {
+          panel.classList.add('hidden');
+          btn.className = 'py-2 rounded-xl text-slate-400 hover:text-white';
+        }
+      });
+      if (tabName === 'share') {
+        collectFormToAppData();
+        updateShareUrlBox();
+      }
+    }
+
+    function populateAdminForm() {
+      document.getElementById('inpEnvTitle').value = appData.meta.envelopeTitle || '';
+      document.getElementById('inpEnvSubtitle').value = appData.meta.envelopeSubtitle || '';
+      document.getElementById('inpBtnText').value = appData.meta.buttonText || '';
+      document.getElementById('inpMusicUrl').value = appData.meta.musicUrl || '';
+
+      document.getElementById('inpGreetingTitle').value = appData.mainView.greetingTitle || '';
+      document.getElementById('inpTypingMessage').value = appData.mainView.typingMessage || '';
+      document.getElementById('inpHintText').value = appData.mainView.hintText || '';
+
+      const container = document.getElementById('flowersEditorContainer');
+      container.innerHTML = '';
+
+      appData.memories.forEach((mem, idx) => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-2xl bg-slate-800/60 border border-slate-700/70 space-y-3';
+        card.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+            <span class="font-bold text-pink-300 text-xs uppercase">🌸 Bông Hoa #${idx + 1}: ${escapeHtml(mem.flowerName)}</span>
+            <span id="imgStatus_${idx}" class="text-[11px] text-emerald-400"></span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div>
+              <label class="block text-slate-400 text-[11px] mb-1">Tên loài hoa:</label>
+              <input id="flName_${idx}" type="text" value="${escapeHtml(mem.flowerName)}"
+                     class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-pink-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-400 text-[11px] mb-1">Tiêu đề kỷ niệm:</label>
+              <input id="flTitle_${idx}" type="text" value="${escapeHtml(mem.title)}"
+                     class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-pink-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-400 text-[11px] mb-1">Ngày / Dịp kỷ niệm:</label>
+              <input id="flDate_${idx}" type="text" value="${escapeHtml(mem.date)}"
+                     class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-pink-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-3 pt-1">
+            <img id="flPreview_${idx}" src="${escapeHtml(mem.image)}" alt="Preview"
+                 class="w-24 h-20 rounded-xl object-cover border border-pink-300/30 bg-slate-950 shrink-0" />
+            <div class="flex-1 w-full space-y-2">
+              <div class="flex items-center gap-2">
+                <label class="cursor-pointer px-3 py-1.5 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/30 text-pink-200 font-semibold text-xs inline-flex items-center gap-1.5 shrink-0">
+                  <span>📤 Tải ảnh từ máy</span>
+                  <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, ${idx})" />
+                </label>
+                <input id="flImage_${idx}" type="text" value="${escapeHtml(mem.image)}" placeholder="Hoặc dán đường dẫn ảnh..."
+                       oninput="document.getElementById('flPreview_${idx}').src = this.value"
+                       class="flex-1 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 text-xs focus:border-pink-500 focus:outline-none" />
+              </div>
+              <textarea id="flNote_${idx}" rows="2" placeholder="Lời nhắn kỷ niệm..."
+                        class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-pink-500 focus:outline-none">${escapeHtml(mem.note)}</textarea>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function handleImageUpload(event, idx) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById(`imgStatus_${idx}`);
+      statusEl.textContent = '⏳ Đang nén ảnh WebP...';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = async function() {
+          const MAX_WIDTH = 900;
+          const MAX_HEIGHT = 900;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height && width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          } else if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          let compressedDataUrl = canvas.toDataURL('image/webp', 0.78);
+          if (compressedDataUrl.indexOf('data:image/webp') !== 0) {
+            compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+          }
+
+          const sizeKB = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
+          const imgbbKey = localStorage.getItem(IMGBB_KEY_STORAGE);
+
+          if (imgbbKey && imgbbKey.trim() !== '') {
+            statusEl.textContent = '☁️ Đang tạo link ngắn...';
+            try {
+              const base64Clean = compressedDataUrl.split(',')[1];
+              const formData = new FormData();
+              formData.append('image', base64Clean);
+              const res = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(imgbbKey.trim())}`, {
+                method: 'POST',
+                body: formData
+              });
+              const json = await res.json();
+              if (json && json.data && json.data.url) {
+                compressedDataUrl = json.data.url;
+                statusEl.textContent = `✓ Đã tạo link ngắn (${sizeKB}KB)`;
+              } else {
+                statusEl.textContent = `✓ Đã nén WebP (${sizeKB}KB)`;
+              }
+            } catch (err) {
+              statusEl.textContent = `✓ Đã nén WebP (${sizeKB}KB)`;
+            }
+          } else {
+            statusEl.textContent = `✓ Đã nén WebP (${sizeKB}KB)`;
+          }
+
+          document.getElementById(`flImage_${idx}`).value = compressedDataUrl;
+          document.getElementById(`flPreview_${idx}`).src = compressedDataUrl;
+          collectFormToAppData();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveImgbbKey(val) {
+      localStorage.setItem(IMGBB_KEY_STORAGE, val.trim());
+    }
+
+    function collectFormToAppData() {
+      appData.meta.envelopeTitle = document.getElementById('inpEnvTitle').value.trim();
+      appData.meta.envelopeSubtitle = document.getElementById('inpEnvSubtitle').value.trim();
+      appData.meta.buttonText = document.getElementById('inpBtnText').value.trim();
+      appData.meta.musicUrl = document.getElementById('inpMusicUrl').value.trim();
+
+      appData.mainView.greetingTitle = document.getElementById('inpGreetingTitle').value.trim();
+      appData.mainView.typingMessage = document.getElementById('inpTypingMessage').value.trim();
+      appData.mainView.hintText = document.getElementById('inpHintText').value.trim();
+
+      appData.memories.forEach((mem, idx) => {
+        const nameEl = document.getElementById(`flName_${idx}`);
+        if (nameEl) {
+          mem.flowerName = nameEl.value.trim();
+          mem.title = document.getElementById(`flTitle_${idx}`).value.trim();
+          mem.date = document.getElementById(`flDate_${idx}`).value.trim();
+          mem.image = document.getElementById(`flImage_${idx}`).value.trim();
+          mem.note = document.getElementById(`flNote_${idx}`).value.trim();
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    function applyAdminChanges(closeAndPreview = false) {
+      collectFormToAppData();
+      renderDataToUI();
+      updateShareUrlBox();
+
+      const toast = document.getElementById('adminSaveToast');
+      toast.classList.remove('opacity-0');
+      setTimeout(() => toast.classList.add('opacity-0'), 2200);
+
+      if (closeAndPreview) {
+        closeAdminStudio();
+        if (isActivated) {
+          startTypingEffect(appData.mainView.typingMessage);
+        }
+      }
+    }
+
+    function updateShareUrlBox() {
+      const encoded = encodeCardDataToHash(appData);
+      const baseUrl = window.location.origin + window.location.pathname;
+      const fullShareUrl = `${baseUrl}#thiep=${encoded}`;
+
+      document.getElementById('shareUrlOutput').value = fullShareUrl;
+
+      const hasBase64Img = appData.memories.some(m => m.image && m.image.startsWith('data:image'));
+      const warningEl = document.getElementById('shareWarningMsg');
+      const badgeEl = document.getElementById('urlSizeBadge');
+
+      if (hasBase64Img || fullShareUrl.length > 3500) {
+        warningEl.classList.remove('hidden');
+        badgeEl.textContent = 'Khuyên dùng Cách 2 (data.json)';
+        badgeEl.className = 'px-2 py-0.5 rounded-full text-[11px] bg-amber-500/20 text-amber-300';
+      } else {
+        warningEl.classList.add('hidden');
+        badgeEl.textContent = 'Link ngắn gọn - Sẵn sàng gửi';
+        badgeEl.className = 'px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300';
+      }
+    }
+
+    function copyShareLink() {
+      collectFormToAppData();
+      updateShareUrlBox();
+      const input = document.getElementById('shareUrlOutput');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        alert('Đã sao chép đường link thiệp! Bạn có thể dán gửi qua Zalo hoặc Messenger ngay.');
+      }).catch(() => {
+        document.execCommand('copy');
+        alert('Đã sao chép đường link thiệp!');
+      });
+    }
+
+    function exportDataJsonFile() {
+      collectFormToAppData();
+      const jsonString = JSON.stringify(appData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function resetToDefaultData() {
+      if (!confirm('Bạn có chắc muốn khôi phục toàn bộ lời chúc và ảnh về mặc định ban đầu?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      window.location.hash = '';
+      appData = JSON.parse(JSON.stringify(defaultData));
+      populateAdminForm();
+      renderDataToUI();
+      updateShareUrlBox();
+    }
+
+    function updateMusicIcon() {
+      if (isMusicPlaying) {
+        iconMusicOn.classList.remove('hidden');
+        iconMusicOff.classList.add('hidden');
+      } else {
+        iconMusicOn.classList.add('hidden');
+        iconMusicOff.classList.remove('hidden');
+      }
+    }
+
+    // Khởi tạo toàn bộ sự kiện chạm đa nền tảng (Touch + Click)
+    function setupAllInteractiveEvents() {
+      // 1. Mở phong bì
+      bindTap(document.getElementById('envelopeBox'), () => activateExperience());
+      bindTap(document.getElementById('openCardBtn'), () => activateExperience());
+
+      // 2. Chạm mở 5 bông hoa SVG
+      document.querySelectorAll('.flower-node').forEach(node => {
+        const idx = parseInt(node.getAttribute('data-index'), 10);
+        bindTap(node, () => openMemory(idx));
+      });
+
+      // 3. Các nút trong Lightbox xem ảnh kỷ niệm
+      bindTap(document.getElementById('closeLightboxTopBtn'), () => closeMemory());
+      bindTap(document.getElementById('closeLightboxBottomBtn'), () => closeMemory());
+      bindTap(document.getElementById('prevFlowerBtn'), () => navigateMemory(-1));
+      bindTap(document.getElementById('nextFlowerBtn'), () => navigateMemory(1));
+      document.getElementById('lightboxModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeMemory();
+      });
+
+      // 4. Nút Admin & Đăng nhập
+      bindTap(document.getElementById('adminTriggerBtn'), () => handleAdminTrigger());
+      bindTap(document.getElementById('cancelAdminLoginBtn'), () => closeAdminLogin());
+      document.getElementById('adminLoginForm').addEventListener('submit', submitAdminLogin);
+      document.getElementById('adminLoginModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeAdminLogin();
+      });
+
+      // 5. Nút Bật/Tắt nhạc
+      bindTap(musicToggleBtn, () => {
+        if (bgMusic.paused) {
+          bgMusic.play();
+          isMusicPlaying = true;
+        } else {
+          bgMusic.pause();
+          isMusicPlaying = false;
+        }
+        updateMusicIcon();
+      });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (isMusicPlaying) bgMusic.pause();
+        isCanvasPaused = true;
+      } else {
+        if (isMusicPlaying && isActivated) bgMusic.play().catch(() => {});
+        const anyModalOpen =
+          document.getElementById('lightboxModal').classList.contains('active') ||
+          document.getElementById('adminLoginModal').classList.contains('active') ||
+          document.getElementById('adminStudioModal').classList.contains('active');
+        if (!anyModalOpen) isCanvasPaused = false;
+      }
+    });
+
+    function initAmbientCanvas() {
+      const canvas = document.getElementById('ambientCanvas');
+      const ctx = canvas.getContext('2d');
+      let width = 0, height = 0;
+
+      function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.scale(dpr, dpr);
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const PARTICLE_COUNT = 22;
+      const particles = Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
+        isPetal: i < 10,
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: i < 10 ? 4 + Math.random() * 4 : 1.5 + Math.random() * 2.2,
+        speedY: i < 10 ? 0.35 + Math.random() * 0.55 : -0.15 - Math.random() * 0.3,
+        speedX: (Math.random() - 0.5) * 0.4,
+        angle: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 0.02,
+        alpha: 0.3 + Math.random() * 0.6,
+        alphaSpeed: 0.008 + Math.random() * 0.012
+      }));
+
+      function renderLoop() {
+        if (!isCanvasPaused) {
+          ctx.clearRect(0, 0, width, height);
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.x += p.speedX + Math.sin(p.angle) * 0.25;
+            p.y += p.speedY;
+            p.angle += p.spin;
+            p.alpha += p.alphaSpeed;
+
+            if (p.alpha > 0.9 || p.alpha < 0.2) p.alphaSpeed *= -1;
+            if (p.y > height + 15) p.y = -15;
+            if (p.y < -15) p.y = height + 15;
+            if (p.x > width + 15) p.x = -15;
+            if (p.x < -15) p.x = width + 15;
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.globalAlpha = Math.max(0.15, Math.min(0.9, p.alpha));
+
+            if (p.isPetal) {
+              ctx.rotate(p.angle);
+              ctx.fillStyle = '#fda4af';
+              ctx.beginPath();
+              ctx.ellipse(0, 0, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              ctx.fillStyle = '#fef08a';
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+        }
+        requestAnimationFrame(renderLoop);
+      }
+      requestAnimationFrame(renderLoop);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setupAllInteractiveEvents();
+      initDataAndPreload();
+      initAmbientCanvas();
+    });
+  </script>
+</body>
+</html>
