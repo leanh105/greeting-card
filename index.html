@@ -52,7 +52,6 @@
       color: #fff;
     }
 
-    /* Đảm bảo mọi nút và vùng tương tác luôn nhận cảm ứng trên iOS/Android WebView */
     button, .interactive-zone, .flower-node {
       cursor: pointer;
       touch-action: manipulation;
@@ -128,7 +127,7 @@
       animation: blinkCursor 0.8s infinite;
     }
 
-    /* SỬA LỖI CHẶN CẢM ỨNG WEBVIEW: Kết hợp visibility: hidden khi đóng Modal */
+    /* Chuyển cảnh Modal an toàn cho WebView */
     .modal-backdrop {
       opacity: 0;
       visibility: hidden;
@@ -148,7 +147,6 @@
       transform: scale(1) translateY(0);
     }
 
-    /* Trạng thái ẩn hoàn toàn cho các màn hình chưa kích hoạt */
     .screen-hidden {
       opacity: 0 !important;
       visibility: hidden !important;
@@ -167,7 +165,7 @@
   <!-- CANVAS HIỆU ỨNG NỀN -->
   <canvas id="ambientCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
 
-  <!-- THANH ĐIỀU KHIỂN TRÊN CÙNG (pointer-events-none ở khung bao để không chắn cảm ứng) -->
+  <!-- THANH ĐIỀU KHIỂN TRÊN CÙNG -->
   <header class="fixed top-0 left-0 right-0 z-30 flex justify-between items-center px-4 pointer-events-none"
           style="padding-top: max(var(--safe-top), 12px);">
     <div id="progressBadge" class="screen-hidden transition-all duration-700 bg-white/10 backdrop-blur-md border border-pink-300/20 rounded-full px-3.5 py-1.5 text-xs font-medium text-pink-100 shadow-sm flex items-center gap-1.5">
@@ -248,7 +246,7 @@
       </div>
     </div>
 
-    <!-- BÓ HOA SVG ĐÃ SỬA HITBOX CẢM ỨNG ĐA NỀN TẢNG -->
+    <!-- BÓ HOA SVG ĐÃ CĂN CHỈNH KHỚP 100% ĐẦU CÀNH VÀ TÂM HOA -->
     <div class="relative flex-1 w-full max-w-sm flex items-center justify-center my-1 overflow-visible">
       <svg id="bouquetSvg" class="w-full h-full max-h-[52dvh] overflow-visible bouquet-sway" viewBox="0 0 360 420" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -276,10 +274,8 @@
           </linearGradient>
         </defs>
 
-        <!-- Lớp giấy gói phía sau -->
         <path d="M78 215 Q180 175 282 215 L230 335 L130 335 Z" fill="url(#wrapBack)" pointer-events="none" />
 
-        <!-- Cành hoa khớp chính xác với tâm 5 bông hoa -->
         <g stroke="#15803d" stroke-width="4" stroke-linecap="round" fill="none" pointer-events="none">
           <path d="M180 320 Q132 250 95 195" />
           <path d="M180 320 Q228 250 265 195" />
@@ -288,7 +284,6 @@
           <path d="M180 320 L180 95" />
         </g>
 
-        <!-- Lá cây bám trên đường cong cành -->
         <g fill="#22c55e" pointer-events="none">
           <path d="M180 195 C160 190 155 170 172 165 C180 168 180 182 180 195 Z" />
           <path d="M180 175 C200 170 205 150 188 145 C180 148 180 162 180 175 Z" />
@@ -300,7 +295,6 @@
           <path d="M234 240 C258 238 265 220 250 212 C238 216 234 228 234 240 Z" />
         </g>
 
-        <!-- Giấy gói phía trước & Nơ lụa liền mạch -->
         <g pointer-events="none">
           <path d="M128 325 L232 325 L212 386 Q180 398 148 386 Z" fill="url(#wrapFront)" />
           <path d="M78 215 L180 272 L235 335 L125 335 Z" fill="url(#wrapFold)" opacity="0.95" />
@@ -326,7 +320,6 @@
               <path d="M-5 -2 Q0 -8 6 -1 Q2 6 -4 3 Z" fill="#fda4af" />
             </g>
           </g>
-          <!-- Lớp nhận diện cảm ứng chuẩn WebView (fill-opacity > 0) -->
           <circle cx="180" cy="95" r="42" fill="#ffffff" fill-opacity="0.005" pointer-events="all" />
         </g>
 
@@ -455,7 +448,7 @@
         🔐
       </div>
       <h3 class="text-lg font-bold text-pink-200 mb-1">Đăng Nhập Quản Trị Viên</h3>
-      <p class="text-xs text-slate-400 mb-4">Nhập mật khẩu Admin để tùy chỉnh nội dung, đăng ảnh và tạo link chia sẻ</p>
+      <p class="text-xs text-slate-400 mb-4">Nhập mật khẩu Admin (00000) để tùy chỉnh nội dung, đăng ảnh và tạo link chia sẻ</p>
 
       <form id="adminLoginForm">
         <input id="adminPasswordInput" type="password" inputmode="numeric" placeholder="Nhập mật khẩu..."
@@ -488,7 +481,7 @@
           <span class="text-lg">🛠️</span>
           <div>
             <h3 class="text-sm sm:text-base font-bold text-pink-300">Admin Studio - Tùy Chỉnh Thiệp</h3>
-            <p class="text-[11px] text-slate-400">Chỉnh sửa thông điệp, tải ảnh kỷ niệm & chia sẻ đường link</p>
+            <p class="text-[11px] text-slate-400">Đã nâng cấp bộ nhớ IndexedDB dung lượng lớn (Lưu 5 ảnh không bao giờ mất)</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -513,7 +506,7 @@
         </button>
         <button type="button" id="tabBtnShare" onclick="switchAdminTab('share')"
                 class="py-2 rounded-xl text-slate-400 hover:text-white">
-          3. Lưu & Chia sẻ Link
+          3. Xuất Bản & Chia Sẻ
         </button>
       </div>
 
@@ -564,21 +557,57 @@
         <!-- TAB 2: TÙY CHỈNH 5 BÔNG HOA & UPLOAD ẢNH -->
         <div id="adminTabFlowers" class="hidden space-y-4">
           <div class="p-3 rounded-xl bg-pink-500/10 border border-pink-400/20 text-xs text-pink-200 flex items-center justify-between">
-            <span>📸 Khi bạn chọn ảnh từ máy, hệ thống sẽ tự động nén sang chuẩn <b>WebP (&lt;120KB)</b> để tải siêu mượt trên 4G.</span>
+            <span>📸 Ảnh tải từ máy lên sẽ tự động nén chuẩn <b>WebP (~50KB/ảnh)</b> và lưu vào bộ nhớ lớn IndexedDB.</span>
           </div>
           <div id="flowersEditorContainer" class="space-y-4"></div>
         </div>
 
-        <!-- TAB 3: LƯU & CHIA SẺ ĐƯỜNG LINK -->
+        <!-- TAB 3: XUẤT BẢN CHO MỌI NGƯỜI CÙNG XEM -->
         <div id="adminTabShare" class="hidden space-y-4">
-          <div class="p-4 rounded-2xl bg-slate-800/70 border border-pink-400/30 space-y-3">
+
+          <!-- CÁCH 1: CẬP NHẬT FILE DATA.JSON LÊN VERCEL -->
+          <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-400/40 space-y-3">
             <div class="flex items-center justify-between">
-              <h4 class="font-bold text-pink-300 text-sm">🔗 Cách 1: Tạo Link Chia Sẻ Trực Tiếp Qua Zalo / Messenger</h4>
-              <span id="urlSizeBadge" class="px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300">Sẵn sàng</span>
+              <h4 class="font-bold text-emerald-300 text-sm">📦 Cách 1 (Khuyên dùng): Xuất File `data.json` Để Mọi Thiết Bị Đều Thấy</h4>
+              <span class="px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300">Ổn định 100%</span>
             </div>
             <p class="text-xs text-slate-300 leading-relaxed">
-              Đường link dưới đây chứa toàn bộ thông điệp và ảnh bạn vừa chỉnh sửa. Bất kỳ ai mở link này đều sẽ thấy bản thiệp mới mà không cần đăng nhập:
+              Vì Vercel là máy chủ tĩnh, để bạn bè mở link gốc trên Zalo/Messenger (điện thoại khác) thấy toàn bộ chữ và 5 bức ảnh bạn vừa tải lên mà không bị hiện mặc định: Hãy bấm nút dưới đây để tải file <code>data.json</code> mới về, sau đó <b>thay thế file <code>data.json</code> này vào thư mục dự án trên GitHub / Vercel</b> của bạn.
             </p>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="exportDataJsonFile()"
+                      class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md active:scale-95 transition-transform">
+                ⬇️ Bấm tải xuống file data.json mới nhất
+              </button>
+              <button type="button" onclick="resetToDefaultData()"
+                      class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs active:scale-95 transition-transform">
+                🔄 Khôi phục mặc định gốc
+              </button>
+            </div>
+          </div>
+
+          <!-- CÁCH 2: ĐỒNG BỘ ĐÁM MÂY TỰ ĐỘNG (KHÔNG CẦN VÀO LẠI VERCEL) -->
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-pink-400/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-pink-300 text-sm">☁️ Cách 2: Đồng Bộ Đám Mây Tự Động (Lưu từ Admin là mọi máy cập nhật ngay)</h4>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Nếu bạn không muốn tải lại <code>data.json</code> lên Vercel mỗi lần sửa: Hãy tạo miễn phí 1 kho lưu trữ JSON tại <b>npoint.io</b> hoặc <b>Firebase Realtime Database</b> (ví dụ: <code>https://ten-project.firebaseio.com/thiep.json</code>) và dán đường dẫn API vào ô dưới đây. Mỗi khi bấm <b>"💾 Lưu & Áp Dụng"</b>, hệ thống sẽ tự động đẩy dữ liệu lên Đám mây cho mọi người cùng xem!
+            </p>
+            <div class="flex gap-2">
+              <input id="cloudSyncUrlInput" type="text" placeholder="Dán link Cloud JSON API (Firebase .json hoặc npoint.io)..."
+                     onchange="saveCloudSyncUrl(this.value)"
+                     class="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-pink-200 text-xs focus:outline-none" />
+            </div>
+            <p id="cloudSyncStatus" class="text-[11px] text-emerald-400"></p>
+          </div>
+
+          <!-- CÁCH 3: LINK CHIA SẺ NHANH -->
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-200 text-sm">🔗 Cách 3: Sao Chép Đường Link Chia Sẻ Trực Tiếp</h4>
+              <span id="urlSizeBadge" class="px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300">Sẵn sàng</span>
+            </div>
             <div class="flex gap-2">
               <input id="shareUrlOutput" type="text" readonly
                      class="flex-1 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-pink-200 text-xs focus:outline-none" />
@@ -588,44 +617,30 @@
               </button>
             </div>
             <p id="shareWarningMsg" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/20 rounded-xl p-2.5">
-              ⚠️ <b>Lưu ý:</b> Bạn đang tải ảnh trực tiếp từ máy (dạng dữ liệu nhúng), khiến đường link rất dài. Để đường link ngắn gọn tuyệt đối, hãy dùng <b>Cách 2 (Tải file data.json)</b> bên dưới hoặc dán mã ImgBB API Key (miễn phí tại <i>api.imgbb.com</i>) vào ô dưới đây:
+              ⚠️ Bạn đang tải ảnh trực tiếp từ máy nên chuỗi mã hóa ảnh khá dài. Để gửi qua Zalo/Messenger mượt nhất, hãy dùng <b>Cách 1 (Tải file data.json cập nhật lên Vercel)</b> hoặc dán <b>ImgBB API Key</b> (miễn phí tại <i>api.imgbb.com</i>) vào ô dưới đây để tự động đổi ảnh thành link ngắn:
             </p>
-            <div class="flex items-center gap-2 pt-1">
-              <input id="imgbbApiKey" type="text" placeholder="Tùy chọn: Dán ImgBB API Key để tự động tạo link ảnh ngắn..."
-                     onchange="saveImgbbKey(this.value)"
-                     class="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs focus:outline-none" />
-            </div>
+            <input id="imgbbApiKey" type="text" placeholder="Tùy chọn: Dán ImgBB API Key để tự động tạo link ảnh ngắn..."
+                   onchange="saveImgbbKey(this.value)"
+                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs focus:outline-none" />
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700 space-y-3">
-            <h4 class="font-bold text-emerald-300 text-sm">📦 Cách 2: Xuất File `data.json` (Cho Link Gốc Ngắn Gọn Vĩnh Viễn)</h4>
-            <p class="text-xs text-slate-300 leading-relaxed">
-              Toàn bộ văn bản và <b>cả 5 bức ảnh bạn vừa tải lên từ máy</b> (đã nén WebP) sẽ được đóng gói vào file <code>data.json</code>. Bạn chỉ cần tải file này về và cập nhật lên Vercel / GitHub là đường link gốc ngắn gọn sẽ hiển thị thiệp mới cho mọi người.
-            </p>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" onclick="exportDataJsonFile()"
-                      class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md active:scale-95 transition-transform">
-                ⬇️ Tải xuống file data.json
-              </button>
-              <button type="button" onclick="resetToDefaultData()"
-                      class="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs active:scale-95 transition-transform">
-                🔄 Khôi phục mặc định
-              </button>
-            </div>
-          </div>
         </div>
 
       </div>
 
       <!-- Footer Bảng Admin -->
-      <div class="flex items-center justify-between px-5 py-3 bg-slate-950/80 border-t border-slate-800">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-5 py-3 bg-slate-950/80 border-t border-slate-800">
         <span id="adminSaveToast" class="text-xs text-emerald-400 font-medium opacity-0 transition-opacity">
-          ✓ Đã áp dụng thay đổi!
+          ✓ Đã lưu thành công!
         </span>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" onclick="previewFromStep1()"
+                  class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-pink-200 active:scale-95 transition-transform">
+            💌 Xem lại từ Phong Bì
+          </button>
           <button type="button" onclick="applyAdminChanges(true)"
                   class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-xs font-bold text-white shadow-lg shadow-rose-500/30 active:scale-95 transition-transform">
-            💾 Lưu & Xem Thử Thiệp
+            💾 Lưu & Áp Dụng Ngay
           </button>
         </div>
       </div>
@@ -637,15 +652,22 @@
   <audio id="bgMusic" loop preload="auto"></audio>
 
   <!-- =========================================================================
-       JAVASCRIPT HỆ THỐNG: ĐÃ TỐI ƯU SỰ KIỆN CHẠM ĐA NỀN TẢNG CHO ZALO/MESSENGER
+       JAVASCRIPT HỆ THỐNG: BỘ NHỚ INDEXEDDB DUNG LƯỢNG LỚN + ĐỒNG BỘ DATA.JSON
        ========================================================================= -->
   <script>
     const ADMIN_PASSWORD = "00000";
-    const STORAGE_KEY = "khu_vuon_ky_niem_custom_data_v1";
     const ADMIN_AUTH_KEY = "khu_vuon_ky_niem_admin_logged";
     const IMGBB_KEY_STORAGE = "khu_vuon_ky_niem_imgbb_key";
+    const CLOUD_SYNC_URL_STORAGE = "khu_vuon_ky_niem_cloud_sync_url";
+
+    // Xóa khóa localStorage cũ bị lỗi kẹt dữ liệu mặc định ở phiên bản trước
+    try { localStorage.removeItem("khu_vuon_ky_niem_custom_data_v1"); } catch (e) {}
+
+    // Cấu hình Cloud URL cố định (Nếu bạn tạo link Firebase/npoint.io, có thể dán thẳng vào giữa dấu nháy dưới đây để mọi máy tự động đọc)
+    const HARDCODED_CLOUD_JSON_URL = "";
 
     const defaultData = {
+      updatedAt: 0,
       meta: {
         envelopeTitle: "Gửi người thương của anh",
         envelopeSubtitle: "Một khu vườn nhỏ lưu giữ những khoảnh khắc của chúng mình...",
@@ -714,13 +736,85 @@
     const iconMusicOn = document.getElementById('iconMusicOn');
     const iconMusicOff = document.getElementById('iconMusicOff');
 
-    // Hàm tiện ích gắn sự kiện chạm/bấm nhạy 100% trên mọi WebView (Zalo, Messenger, Safari, Chrome)
+    // =========================================================================
+    // 1. BỘ NHỚ INDEXEDDB DUNG LƯỢNG LỚN (LƯU 5 ẢNH WEBP KHÔNG BAO GIỜ LỖI)
+    // =========================================================================
+    const DB_NAME = "KhuVuonKyNiemDB";
+    const STORE_NAME = "cardStore";
+    const RECORD_KEY = "savedCardData";
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject("No IndexedDB");
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function saveToIndexedDB(dataObj) {
+      try {
+        const db = await openDatabase();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          const store = tx.objectStore(STORE_NAME);
+          store.put(dataObj, RECORD_KEY);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = (e) => reject(e.target.error);
+        });
+      } catch (err) {
+        // Fallback sang localStorage nếu trình duyệt khóa IndexedDB
+        try {
+          localStorage.setItem("khu_vuon_backup_v2", JSON.stringify(dataObj));
+        } catch (e) {}
+        return false;
+      }
+    }
+
+    async function loadFromIndexedDB() {
+      try {
+        const db = await openDatabase();
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE_NAME, "readonly");
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.get(RECORD_KEY);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (err) {
+        try {
+          const raw = localStorage.getItem("khu_vuon_backup_v2");
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+
+    async function clearIndexedDB() {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        tx.objectStore(STORE_NAME).delete(RECORD_KEY);
+      } catch (e) {}
+      try { localStorage.removeItem("khu_vuon_backup_v2"); } catch (e) {}
+    }
+
+    // =========================================================================
+    // 2. HÀM TIỆN ÍCH CHẠM ĐA NỀN TẢNG & MÃ HÓA URL
+    // =========================================================================
     function bindTap(element, callback) {
       if (!element) return;
       let lastTapTime = 0;
       const handler = (e) => {
         const now = Date.now();
-        if (now - lastTapTime < 300) return; // Chống nhân đôi sự kiện giữa touchend và click
+        if (now - lastTapTime < 300) return;
         lastTapTime = now;
         callback(e);
       };
@@ -764,27 +858,65 @@
       }
     }
 
+    // =========================================================================
+    // 3. KHỞI TẠO DỮ LIỆU THÔNG MINH (SO SÁNH BẢN MỚI NHẤT)
+    // =========================================================================
     async function initDataAndPreload() {
+      let serverData = null;
+      let cloudData = null;
+      let localData = null;
+
+      // B1: Đọc file data.json trên Vercel (chống cache cũ bằng timestamp)
       try {
-        const res = await fetch('./data.json', { cache: 'no-store' });
+        const res = await fetch('./data.json?t=' + Date.now(), { cache: 'no-store' });
         if (res.ok) {
-          appData = await res.json();
+          const parsed = await res.json();
+          if (parsed && parsed.meta && parsed.memories) {
+            serverData = parsed;
+          }
         }
       } catch (e) {}
 
-      const savedLocal = localStorage.getItem(STORAGE_KEY);
-      if (savedLocal) {
+      // B2: Đọc từ Cloud Sync URL nếu có cấu hình
+      const cloudUrl = HARDCODED_CLOUD_JSON_URL || localStorage.getItem(CLOUD_SYNC_URL_STORAGE);
+      if (cloudUrl && cloudUrl.trim() !== '') {
         try {
-          appData = JSON.parse(savedLocal);
+          const res = await fetch(cloudUrl.trim(), { cache: 'no-store' });
+          if (res.ok) {
+            const parsed = await res.json();
+            if (parsed && parsed.meta && parsed.memories) {
+              cloudData = parsed;
+            }
+          }
         } catch (e) {}
       }
 
+      // B3: Đọc bản lưu trong IndexedDB trên trình duyệt hiện tại
+      localData = await loadFromIndexedDB();
+
+      // Chọn bản dữ liệu mới nhất theo thứ tự ưu tiên hợp lý
+      if (serverData) {
+        appData = serverData;
+      }
+      if (cloudData && (!appData.updatedAt || (cloudData.updatedAt || 0) >= (appData.updatedAt || 0))) {
+        appData = cloudData;
+      }
+      if (localData && localData.meta && localData.memories) {
+        const localTime = localData.updatedAt || 1;
+        const currentTime = appData.updatedAt || 0;
+        if (localTime >= currentTime) {
+          appData = localData;
+        }
+      }
+
+      // B4: Nếu mở từ đường link có mã hóa #thiep=... hợp lệ thì ưu tiên hiển thị theo link
       const hash = window.location.hash;
       if (hash.startsWith('#thiep=')) {
         const encoded = hash.replace('#thiep=', '');
         const decoded = decodeCardDataFromHash(encoded);
         if (decoded && decoded.meta && decoded.memories) {
           appData = decoded;
+          await saveToIndexedDB(appData);
         }
       }
 
@@ -816,7 +948,9 @@
       });
     }
 
-    // Bước 2: Kích hoạt mở phong bì
+    // =========================================================================
+    // 4. LUỒNG TRẢI NGHIỆM 4 BƯỚC
+    // =========================================================================
     function activateExperience() {
       if (isActivated) return;
       isActivated = true;
@@ -849,6 +983,26 @@
         musicToggleBtn.classList.remove('screen-hidden');
         startTypingEffect(appData.mainView.typingMessage);
       }, 1250);
+    }
+
+    // Cho phép Admin xem thử lại ngay từ Bước 1 (Phong bì) sau khi sửa
+    async function previewFromStep1() {
+      await applyAdminChanges(false);
+      closeAdminStudio();
+
+      isActivated = false;
+      const envelopeBox = document.getElementById('envelopeBox');
+      const landingView = document.getElementById('landingView');
+      const mainView = document.getElementById('mainView');
+      const progressBadge = document.getElementById('progressBadge');
+
+      envelopeBox.classList.remove('envelope-open');
+      envelopeBox.style.opacity = '1';
+      envelopeBox.style.transform = 'scale(1)';
+
+      mainView.classList.add('screen-hidden');
+      progressBadge.classList.add('screen-hidden');
+      landingView.style.display = 'flex';
     }
 
     function startTypingEffect(text) {
@@ -902,7 +1056,9 @@
       isCanvasPaused = false;
     }
 
-    // Hệ thống Admin Studio (Mật khẩu: 00000)
+    // =========================================================================
+    // 5. QUẢN TRỊ VIÊN ADMIN STUDIO (MẬT KHẨU: 00000)
+    // =========================================================================
     function isAdminAuthenticated() {
       return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
     }
@@ -962,6 +1118,7 @@
       populateAdminForm();
       updateShareUrlBox();
       document.getElementById('imgbbApiKey').value = localStorage.getItem(IMGBB_KEY_STORAGE) || '';
+      document.getElementById('cloudSyncUrlInput').value = HARDCODED_CLOUD_JSON_URL || localStorage.getItem(CLOUD_SYNC_URL_STORAGE) || '';
       document.getElementById('adminStudioModal').classList.add('active');
     }
 
@@ -984,7 +1141,7 @@
         }
       });
       if (tabName === 'share') {
-        collectFormToAppData();
+        collectFormToMemoryOnly();
         updateShareUrlBox();
       }
     }
@@ -1059,28 +1216,28 @@
         .replace(/>/g, '&gt;');
     }
 
+    // Nén ảnh thông minh xuống ~45KB - 80KB để cực nhẹ và sắc nét
     function handleImageUpload(event, idx) {
       const file = event.target.files[0];
       if (!file) return;
 
       const statusEl = document.getElementById(`imgStatus_${idx}`);
-      statusEl.textContent = '⏳ Đang nén ảnh WebP...';
+      statusEl.textContent = '⏳ Đang nén ảnh...';
 
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
         img.onload = async function() {
-          const MAX_WIDTH = 900;
-          const MAX_HEIGHT = 900;
+          const MAX_DIM = 720;
           let width = img.width;
           let height = img.height;
 
-          if (width > height && width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          } else if (height > MAX_HEIGHT) {
-            width = Math.round((width * MAX_HEIGHT) / height);
-            height = MAX_HEIGHT;
+          if (width > height && width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
           }
 
           const canvas = document.createElement('canvas');
@@ -1089,9 +1246,9 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          let compressedDataUrl = canvas.toDataURL('image/webp', 0.78);
+          let compressedDataUrl = canvas.toDataURL('image/webp', 0.72);
           if (compressedDataUrl.indexOf('data:image/webp') !== 0) {
-            compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
           }
 
           const sizeKB = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
@@ -1112,18 +1269,19 @@
                 compressedDataUrl = json.data.url;
                 statusEl.textContent = `✓ Đã tạo link ngắn (${sizeKB}KB)`;
               } else {
-                statusEl.textContent = `✓ Đã nén WebP (${sizeKB}KB)`;
+                statusEl.textContent = `✓ Đã nén (${sizeKB}KB)`;
               }
             } catch (err) {
-              statusEl.textContent = `✓ Đã nén WebP (${sizeKB}KB)`;
+              statusEl.textContent = `✓ Đã nén (${sizeKB}KB)`;
             }
           } else {
-            statusEl.textContent = `✓ Đã nén WebP (${sizeKB}KB)`;
+            statusEl.textContent = `✓ Đã nén (${sizeKB}KB)`;
           }
 
           document.getElementById(`flImage_${idx}`).value = compressedDataUrl;
           document.getElementById(`flPreview_${idx}`).src = compressedDataUrl;
-          collectFormToAppData();
+          collectFormToMemoryOnly();
+          await saveToIndexedDB(appData);
         };
         img.src = e.target.result;
       };
@@ -1131,10 +1289,16 @@
     }
 
     function saveImgbbKey(val) {
-      localStorage.setItem(IMGBB_KEY_STORAGE, val.trim());
+      try { localStorage.setItem(IMGBB_KEY_STORAGE, val.trim()); } catch (e) {}
     }
 
-    function collectFormToAppData() {
+    function saveCloudSyncUrl(val) {
+      try { localStorage.setItem(CLOUD_SYNC_URL_STORAGE, val.trim()); } catch (e) {}
+    }
+
+    // Chỉ thu thập dữ liệu từ các ô input vào biến appData (không tự ý ghi đè khi chưa bấm Lưu)
+    function collectFormToMemoryOnly() {
+      appData.updatedAt = Date.now();
       appData.meta.envelopeTitle = document.getElementById('inpEnvTitle').value.trim();
       appData.meta.envelopeSubtitle = document.getElementById('inpEnvSubtitle').value.trim();
       appData.meta.buttonText = document.getElementById('inpBtnText').value.trim();
@@ -1154,18 +1318,51 @@
           mem.note = document.getElementById(`flNote_${idx}`).value.trim();
         }
       });
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
     }
 
-    function applyAdminChanges(closeAndPreview = false) {
-      collectFormToAppData();
+    // Lưu chính thức vào IndexedDB + Đồng bộ Cloud (nếu có) + Cập nhật giao diện ngay lập tức
+    async function applyAdminChanges(closeAndPreview = false) {
+      collectFormToMemoryOnly();
+
+      // 1. Lưu vào IndexedDB dung lượng lớn
+      await saveToIndexedDB(appData);
+
+      // 2. Nếu có cấu hình Cloud Sync URL thì tự động đẩy bản mới lên Cloud
+      const cloudUrl = HARDCODED_CLOUD_JSON_URL || localStorage.getItem(CLOUD_SYNC_URL_STORAGE);
+      const cloudStatus = document.getElementById('cloudSyncStatus');
+      if (cloudUrl && cloudUrl.trim() !== '') {
+        try {
+          if (cloudStatus) cloudStatus.textContent = '⏳ Đang đồng bộ lên Đám mây...';
+          const method = cloudUrl.includes('firebaseio.com') ? 'PUT' : 'POST';
+          await fetch(cloudUrl.trim(), {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appData)
+          });
+          if (cloudStatus) cloudStatus.textContent = '✓ Đã đồng bộ lên Đám mây thành công!';
+        } catch (err) {
+          if (cloudStatus) cloudStatus.textContent = '⚠️ Không thể ghi lên Cloud URL này, hãy kiểm tra lại quyền PUT/POST.';
+        }
+      }
+
+      // 3. Nếu toàn bộ ảnh đều là link ngắn, tự động gắn mã vào thanh địa chỉ để copy lúc nào cũng có dữ liệu
+      const hasBase64Img = appData.memories.some(m => m.image && m.image.startsWith('data:image'));
+      if (!hasBase64Img) {
+        const encoded = encodeCardDataToHash(appData);
+        if (encoded && encoded.length < 3500) {
+          try {
+            window.history.replaceState(null, '', '#thiep=' + encoded);
+          } catch (e) {}
+        }
+      }
+
       renderDataToUI();
       updateShareUrlBox();
 
       const toast = document.getElementById('adminSaveToast');
+      toast.textContent = '✓ Đã lưu thành công vào bộ nhớ!';
       toast.classList.remove('opacity-0');
-      setTimeout(() => toast.classList.add('opacity-0'), 2200);
+      setTimeout(() => toast.classList.add('opacity-0'), 2500);
 
       if (closeAndPreview) {
         closeAdminStudio();
@@ -1188,7 +1385,7 @@
 
       if (hasBase64Img || fullShareUrl.length > 3500) {
         warningEl.classList.remove('hidden');
-        badgeEl.textContent = 'Khuyên dùng Cách 2 (data.json)';
+        badgeEl.textContent = 'Khuyên dùng Cách 1 (data.json)';
         badgeEl.className = 'px-2 py-0.5 rounded-full text-[11px] bg-amber-500/20 text-amber-300';
       } else {
         warningEl.classList.add('hidden');
@@ -1197,9 +1394,8 @@
       }
     }
 
-    function copyShareLink() {
-      collectFormToAppData();
-      updateShareUrlBox();
+    async function copyShareLink() {
+      await applyAdminChanges(false);
       const input = document.getElementById('shareUrlOutput');
       input.select();
       navigator.clipboard.writeText(input.value).then(() => {
@@ -1210,8 +1406,8 @@
       });
     }
 
-    function exportDataJsonFile() {
-      collectFormToAppData();
+    async function exportDataJsonFile() {
+      await applyAdminChanges(false);
       const jsonString = JSON.stringify(appData, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -1225,10 +1421,10 @@
       URL.revokeObjectURL(url);
     }
 
-    function resetToDefaultData() {
-      if (!confirm('Bạn có chắc muốn khôi phục toàn bộ lời chúc và ảnh về mặc định ban đầu?')) return;
-      localStorage.removeItem(STORAGE_KEY);
-      window.location.hash = '';
+    async function resetToDefaultData() {
+      if (!confirm('Bạn có chắc muốn xóa bản lưu hiện tại và khôi phục về mặc định ban đầu?')) return;
+      await clearIndexedDB();
+      try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
       appData = JSON.parse(JSON.stringify(defaultData));
       populateAdminForm();
       renderDataToUI();
@@ -1245,19 +1441,15 @@
       }
     }
 
-    // Khởi tạo toàn bộ sự kiện chạm đa nền tảng (Touch + Click)
     function setupAllInteractiveEvents() {
-      // 1. Mở phong bì
       bindTap(document.getElementById('envelopeBox'), () => activateExperience());
       bindTap(document.getElementById('openCardBtn'), () => activateExperience());
 
-      // 2. Chạm mở 5 bông hoa SVG
       document.querySelectorAll('.flower-node').forEach(node => {
         const idx = parseInt(node.getAttribute('data-index'), 10);
         bindTap(node, () => openMemory(idx));
       });
 
-      // 3. Các nút trong Lightbox xem ảnh kỷ niệm
       bindTap(document.getElementById('closeLightboxTopBtn'), () => closeMemory());
       bindTap(document.getElementById('closeLightboxBottomBtn'), () => closeMemory());
       bindTap(document.getElementById('prevFlowerBtn'), () => navigateMemory(-1));
@@ -1266,7 +1458,6 @@
         if (e.target === e.currentTarget) closeMemory();
       });
 
-      // 4. Nút Admin & Đăng nhập
       bindTap(document.getElementById('adminTriggerBtn'), () => handleAdminTrigger());
       bindTap(document.getElementById('cancelAdminLoginBtn'), () => closeAdminLogin());
       document.getElementById('adminLoginForm').addEventListener('submit', submitAdminLogin);
@@ -1274,7 +1465,6 @@
         if (e.target === e.currentTarget) closeAdminLogin();
       });
 
-      // 5. Nút Bật/Tắt nhạc
       bindTap(musicToggleBtn, () => {
         if (bgMusic.paused) {
           bgMusic.play();
